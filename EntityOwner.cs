@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Entity Owner", "Calytic", "3.3.1")]
+    [Info("Entity Owner", "Calytic", "3.4.0")]
     [Description("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -65,6 +65,7 @@ namespace Oxide.Plugins
             {"Turrets: Deauthorized", "Deauthorized {0} on {1} turrets"},
             {"Turrets: Deauthorizing", "Deauthorizing turrets.."},
             {"Lock: Code", "Code: {0}"},
+            {"Lock: Owner", "Lock owner: {0}"},
             {"Bag: Assignee", "Assigned: {0}"}
         };
 
@@ -215,6 +216,16 @@ namespace Oxide.Plugins
 
                     string msg = string.Format(GetMsg("Target: Owner", player), owner);
 
+                    var baseLock = targetEntity.GetSlot(BaseEntity.Slot.Lock) as BaseLock;
+                    if (baseLock != null)
+                    {
+                        if (baseLock.OwnerID != 0 && baseLock.OwnerID != targetEntity.OwnerID)
+                        {
+                            var lockOwnerName = GetOwnerName(baseLock);
+                            msg += "\n" + string.Format(GetMsg("Lock: Owner", player), lockOwnerName);
+                        }
+                    }
+
                     if (canSeeDetails(player))
                     {
                         msg += "\n<color=#D3D3D3>Name: " + targetEntity.ShortPrefabName + "</color>";
@@ -233,10 +244,9 @@ namespace Oxide.Plugins
 
                     if (canCheckCodes(player))
                     {
-                        var baseLock = targetEntity.GetSlot(BaseEntity.Slot.Lock);
-                        if (baseLock is CodeLock)
+                        var codeLock = baseLock as CodeLock;
+                        if (codeLock != null)
                         {
-                            CodeLock codeLock = (CodeLock)baseLock;
                             string keyCode = codeLock.code;
                             msg += "\n" + string.Format(GetMsg("Lock: Code", player), keyCode);
                         }
