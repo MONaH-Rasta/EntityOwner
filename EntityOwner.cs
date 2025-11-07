@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Entity Owner", "Calytic", "3.4.0")]
+    [Info("Entity Owner", "Calytic", "3.4.1")]
     [Description("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -72,6 +72,10 @@ namespace Oxide.Plugins
         // Loads the default configuration
         protected override void LoadDefaultConfig()
         {
+            Config["Debug"] = false;
+            Config["EntityLimit"] = EntityLimit;
+            Config["DistanceThreshold"] = DistanceThreshold;
+            Config["CupboardDistanceThreshold"] = CupboardDistanceThreshold;
             Config["VERSION"] = Version.ToString();
             Config.Save();
         }
@@ -86,6 +90,10 @@ namespace Oxide.Plugins
             Config["VERSION"] = Version.ToString();
 
             // NEW CONFIGURATION OPTIONS HERE
+            Config["Debug"] = false;
+            Config["EntityLimit"] = EntityLimit;
+            Config["DistanceThreshold"] = DistanceThreshold;
+            Config["CupboardDistanceThreshold"] = CupboardDistanceThreshold;
             // END NEW CONFIGURATION OPTIONS
 
             PrintToConsole("Upgrading Configuration File");
@@ -124,10 +132,10 @@ namespace Oxide.Plugins
                     PrintWarning("ALERT: Distance threshold configuration option is ABOVE 5.  This may cause serious performance degradation (lag) when using EntityOwner commands");
                 }
 
-                if (!permission.PermissionExists("entityowner.cancheckowners")) permission.RegisterPermission("entityowner.cancheckowners", this);
-                if (!permission.PermissionExists("entityowner.cancheckcodes")) permission.RegisterPermission("entityowner.cancheckcodes", this);
-                if (!permission.PermissionExists("entityowner.canchangeowners")) permission.RegisterPermission("entityowner.canchangeowners", this);
-                if (!permission.PermissionExists("entityowner.seedetails")) permission.RegisterPermission("entityowner.seedetails", this);
+                permission.RegisterPermission("entityowner.cancheckowners", this);
+                permission.RegisterPermission("entityowner.cancheckcodes", this);
+                permission.RegisterPermission("entityowner.canchangeowners", this);
+                permission.RegisterPermission("entityowner.seedetails", this);
 
                 LoadData();
             }
