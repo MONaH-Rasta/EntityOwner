@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info ("Entity Owner", "Calytic", "3.2.0")]
+    [Info ("Entity Owner", "Calytic", "3.2.1")]
     [Description ("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -1524,15 +1524,15 @@ namespace Oxide.Plugins
                 var player = FindPlayerByPartialName (playerID.ToString ());
                 if (player) {
                     if (player.IsSleeping ()) {
-                        return $"{player.displayName} [<color=lightblue>Sleeping</color>]";
+                        return $"{player.displayName} [<color=#ADD8E6>Sleeping</color>]";
                     }
 
-                    return $"{player.displayName} [<color=lime>Online</color>]";
+                    return $"{player.displayName} [<color=#32CD32>Online</color>]";
                 }
 
                 var p = covalence.Players.FindPlayerById (playerID.ToString ());
                 if (p != null) {
-                    return $"{p.Name} [<color=red>Offline</color>]";
+                    return $"{p.Name} [<color=#FF0000>Offline</color>]";
                 }
             }
 
