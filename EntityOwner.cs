@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info ("Entity Owner", "Calytic", "3.2.3")]
+    [Info ("Entity Owner", "Calytic", "3.2.4")]
     [Description ("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -62,7 +62,8 @@ namespace Oxide.Plugins
             {"Turrets: Prodding", "Prodding turrets.."},
             {"Turrets: Deauthorized", "Deauthorized {0} on {1} turrets"},
             {"Turrets: Deauthorizing", "Deauthorizing turrets.."},
-            {"Lock: Code", "Code: {0}"}
+            {"Lock: Code", "Code: {0}"},
+            {"Bag: Assignee", "Assigned: {0}"}
         };
 
         // Loads the default configuration
@@ -219,6 +220,13 @@ namespace Oxide.Plugins
                             CodeLock codeLock = (CodeLock)baseLock;
                             string keyCode = codeLock.code;
                             msg += "\n" + string.Format (GetMsg ("Lock: Code", player), keyCode);
+                        }
+                    }
+
+                    if (canCheckAssignee (player)) {
+                        if (targetEntity is SleepingBag) {
+                            SleepingBag bag = (SleepingBag) targetEntity;
+                            msg += "\n" + string.Format(GetMsg("Bag: Assignee", player), FindPlayerName(bag.deployerUserID));
                         }
                     }
 
@@ -595,6 +603,13 @@ namespace Oxide.Plugins
             if (player == null) return false;
             if (player.net.connection.authLevel > 0) return true;
             return permission.UserHasPermission (player.UserIDString, "entityowner.cancheckcodes");
+        }
+
+        bool canCheckAssignee(BasePlayer player)
+        {
+            if (player == null) return false;
+            if (player.net.connection.authLevel > 0) return true;
+            return permission.UserHasPermission(player.UserIDString, "entityowner.cancheckassignee");
         }
 
         bool canSeeDetails (BasePlayer player)
