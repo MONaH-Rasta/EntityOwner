@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info ("Entity Owner", "Calytic", "3.2.1")]
+    [Info ("Entity Owner", "Calytic", "3.2.2")]
     [Description ("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -201,16 +201,16 @@ namespace Oxide.Plugins
                     string msg = string.Format (GetMsg ("Target: Owner", player), owner);
 
                     if (canSeeDetails (player)) {
-                        msg += "\n<color=lightgrey>Name: " + targetEntity.ShortPrefabName + "</color>";
+                        msg += "\n<color=#D3D3D3>Name: " + targetEntity.ShortPrefabName + "</color>";
                         if (targetEntity.skinID > 0) {
-                            msg += "\n<color=lightgrey>Skin: " + targetEntity.skinID + "</color>";
+                            msg += "\n<color=#D3D3D3>Skin: " + targetEntity.skinID + "</color>";
                         }
 
                         if (targetEntity.PrefabName != targetEntity.ShortPrefabName) {
-                            msg += "\n<color=lightgrey>Prefab: \"" + targetEntity.PrefabName + "\"</color>";
+                            msg += "\n<color=#D3D3D3>Prefab: \"" + targetEntity.PrefabName + "\"</color>";
                         }
 
-                        msg += "\n<color=lightgrey>Outside: " + (targetEntity.IsOutside () ? "Yes" : "No") + "</color>";
+                        msg += "\n<color=#D3D3D3>Outside: " + (targetEntity.IsOutside () ? "Yes" : "No") + "</color>";
                     }
 
                     if (canCheckCodes (player)) {
