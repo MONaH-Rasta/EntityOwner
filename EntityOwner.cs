@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info ("Entity Owner", "Calytic", "3.2.2")]
+    [Info ("Entity Owner", "Calytic", "3.2.3")]
     [Description ("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -301,7 +301,7 @@ namespace Oxide.Plugins
                 massChangeOwner<SleepingBag> (player, target);
                 break;
             case "plant":
-                massChangeOwner<PlantEntity> (player, target);
+                massChangeOwner<GrowableEntity> (player, target);
                 break;
             case "oven":
                 massChangeOwner<BaseOven> (player, target);
@@ -361,7 +361,7 @@ namespace Oxide.Plugins
                 massChangeOwner<SleepingBag> (player);
                 break;
             case "plant":
-                massChangeOwner<PlantEntity> (player);
+                massChangeOwner<GrowableEntity> (player);
                 break;
             case "oven":
                 massChangeOwner<BaseOven> (player);
@@ -557,7 +557,7 @@ namespace Oxide.Plugins
                     massProd<SleepingBag> (player, highlight);
                     break;
                 case "plant":
-                    massProd<PlantEntity> (player, highlight);
+                    massProd<GrowableEntity> (player, highlight);
                     break;
                 case "oven":
                     massProd<BaseOven> (player, highlight);
