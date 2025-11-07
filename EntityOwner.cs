@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info("Entity Owner", "Calytic", "3.4.1")]
+    [Info("Entity Owner", "Calytic", "3.4.2")]
     [Description("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -1222,12 +1222,12 @@ namespace Oxide.Plugins
                         }
                         checkFrom.Add(e.transform.position);
 
-                        foreach (var pnid in e.authorizedPlayers)
+                        foreach (var userid in e.authorizedPlayers)
                         {
-                            if (prodOwners.ContainsKey(pnid.userid))
-                                prodOwners[pnid.userid]++;
+                            if (prodOwners.ContainsKey(userid))
+                                prodOwners[userid]++;
                             else
-                                prodOwners.Add(pnid.userid, 1);
+                                prodOwners.Add(userid, 1);
                         }
 
                         total++;
@@ -1319,12 +1319,12 @@ namespace Oxide.Plugins
                                     prodOwners.Add(turret.OwnerID, 1);
                             }
 
-                            foreach (var pnid in turret.authorizedPlayers)
+                            foreach (var userid in turret.authorizedPlayers)
                             {
-                                if (prodOwners.ContainsKey(pnid.userid))
-                                    prodOwners[pnid.userid]++;
+                                if (prodOwners.ContainsKey(userid))
+                                    prodOwners[userid]++;
                                 else
-                                    prodOwners.Add(pnid.userid, 1);
+                                    prodOwners.Add(userid, 1);
                             }
                         }
                         else if (e is FlameTurret)
@@ -1419,11 +1419,7 @@ namespace Oxide.Plugins
                         if (!entityList.Add(priv)) continue;
                         checkFrom.Add(priv.transform.position);
                         if (HasCupboardAccess(priv, target)) continue;
-                        priv.authorizedPlayers.Add(new ProtoBuf.PlayerNameID()
-                        {
-                            userid = target.userID,
-                            username = target.displayName
-                        });
+                        priv.authorizedPlayers.Add(target.userID);
 
                         priv.SendNetworkUpdate(BasePlayer.NetworkQueue.Update);
 
@@ -1482,13 +1478,9 @@ namespace Oxide.Plugins
                         checkFrom.Add(priv.transform.position);
 
                         if (!HasCupboardAccess(priv, target)) continue;
-                        foreach (var p in priv.authorizedPlayers.ToArray())
+                        if( priv.authorizedPlayers.Remove( target.userID ) )
                         {
-                            if (p.userid == target.userID)
-                            {
-                                priv.authorizedPlayers.Remove(p);
-                                priv.SendNetworkUpdate(BasePlayer.NetworkQueue.Update);
-                            }
+                            priv.SendNetworkUpdate(BasePlayer.NetworkQueue.Update);
                         }
 
                         total++;
@@ -1547,11 +1539,7 @@ namespace Oxide.Plugins
 
                         var turret = e as AutoTurret;
                         if (turret == null || HasTurretAccess(turret, target)) continue;
-                        turret.authorizedPlayers.Add(new ProtoBuf.PlayerNameID()
-                        {
-                            userid = target.userID,
-                            username = target.displayName
-                        });
+                        turret.authorizedPlayers.Add(target.userID);
 
                         turret.SendNetworkUpdate(BasePlayer.NetworkQueue.Update);
                         turret.SetTarget(null);
@@ -1611,14 +1599,10 @@ namespace Oxide.Plugins
 
                         var turret = e as AutoTurret;
                         if (turret == null || !HasTurretAccess(turret, target)) continue;
-                        foreach (var p in turret.authorizedPlayers.ToArray())
+                        if (turret.authorizedPlayers.Remove(target.userID))
                         {
-                            if (p.userid == target.userID)
-                            {
-                                turret.authorizedPlayers.Remove(p);
-                                turret.SetTarget(null);
-                                total++;
-                            }
+                            turret.SetTarget(null);
+                            total++;
                         }
 
                         turret.SendNetworkUpdate(BasePlayer.NetworkQueue.Update);
@@ -1638,8 +1622,8 @@ namespace Oxide.Plugins
             if (cupboard.authorizedPlayers.Count == 0)
                 return false;
 
-            foreach (var pnid in cupboard.authorizedPlayers)
-                names.Add($"{FindPlayerName(pnid.userid)} - {pnid.userid}");
+            foreach (var userid in cupboard.authorizedPlayers)
+                names.Add($"{FindPlayerName(userid)} - {userid}");
 
             return true;
         }
@@ -1652,8 +1636,8 @@ namespace Oxide.Plugins
             if (turret.authorizedPlayers.Count == 0)
                 return false;
 
-            foreach (var pnid in turret.authorizedPlayers)
-                names.Add($"{FindPlayerName(pnid.userid)} - {pnid.userid}");
+            foreach (var userid in turret.authorizedPlayers)
+                names.Add($"{FindPlayerName(userid)} - {userid}");
 
             return true;
         }
