@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info ("Entity Owner", "Calytic", "3.1.8")]
+    [Info ("Entity Owner", "Calytic", "3.1.9")]
     [Description ("Modify entity ownership and cupboard/turret authorization")]
     class EntityOwner : RustPlugin
     {
@@ -53,6 +53,7 @@ namespace Oxide.Plugins
             "Count ({0})",
             "Unknown player",
             "Unknown: {0}%",
+            "Condition: {0}%",
             "Authorizing cupboards..",
             "Authorized {0} on {1} cupboards",
             "({0}) Authorized",
@@ -143,6 +144,7 @@ namespace Oxide.Plugins
                 if (!permission.PermissionExists ("entityowner.cancheckowners")) permission.RegisterPermission ("entityowner.cancheckowners", this);
                 if (!permission.PermissionExists ("entityowner.cancheckcodes")) permission.RegisterPermission ("entityowner.cancheckcodes", this);
                 if (!permission.PermissionExists ("entityowner.canchangeowners")) permission.RegisterPermission ("entityowner.canchangeowners", this);
+                if (!permission.PermissionExists ("entityowner.seedetails")) permission.RegisterPermission ("entityowner.seedetails", this);
 
                 LoadData ();
             } catch (Exception ex) {
@@ -226,7 +228,20 @@ namespace Oxide.Plugins
                         owner = "N/A";
                     }
 
-                    string msg = string.Format (messages ["Owner: {0}"], owner) + "\n<color=lightgrey>" + targetEntity.ShortPrefabName + "</color>";
+                    string msg = string.Format (messages ["Owner: {0}"], owner);
+
+                    if (canSeeDetails (player)) {
+                        msg += "\n<color=lightgrey>Name: " + targetEntity.ShortPrefabName + "</color>";
+                        if (targetEntity.skinID > 0) {
+                            msg += "\n<color=lightgrey>Skin: " + targetEntity.skinID + "</color>";
+                        }
+
+                        if (targetEntity.PrefabName != targetEntity.ShortPrefabName) {
+                            msg += "\n<color=lightgrey>Prefab: \"" + targetEntity.PrefabName + "\"</color>";
+                        }
+
+                        msg += "\n<color=lightgrey>Outside: " + (targetEntity.IsOutside () ? "Yes" : "No") + "</color>";
+                    }
 
                     if (canCheckCodes (player)) {
                         var baseLock = targetEntity.GetSlot (BaseEntity.Slot.Lock);
@@ -612,6 +627,13 @@ namespace Oxide.Plugins
             return permission.UserHasPermission (player.UserIDString, "entityowner.cancheckcodes");
         }
 
+        bool canSeeDetails (BasePlayer player)
+        {
+            if (player == null) return false;
+            if (player.net.connection.authLevel > 0) return true;
+            return permission.UserHasPermission (player.UserIDString, "entityowner.seedetails");
+        }
+
         bool canChangeOwners (BasePlayer player)
         {
             if (player == null) return false;
@@ -627,15 +649,10 @@ namespace Oxide.Plugins
         {
             entity = null;
 
-            object entityObject = false;
-            if (typeof (T) == typeof (BuildingBlock)) {
-                entityObject = FindBuilding (player.transform.position, DistanceThreshold);
-            } else {
-                entityObject = FindEntity (player.transform.position, DistanceThreshold);
-            }
+            var target = RaycastAll<BaseEntity> (player.eyes.HeadRay ());
 
-            if (entityObject is T) {
-                entity = entityObject as T;
+            if (target is T) {
+                entity = target as T;
                 return true;
             }
 
@@ -740,6 +757,8 @@ namespace Oxide.Plugins
             if (entityObject is bool) {
                 SendReply (player, messages ["No entities found."]);
             } else {
+                float health = 0f;
+                float maxHealth = 0f;
                 var prodOwners = new Dictionary<ulong, int> ();
                 var entity = entityObject as BaseEntity;
                 if (entity.transform == null) {
@@ -771,6 +790,8 @@ namespace Oxide.Plugins
 
                     if (!skip) {
                         prodOwners.Add (entity.OwnerID, 1);
+                        health += entity.Health ();
+                        maxHealth += entity.MaxHealth ();
                         total++;
                     }
                 }
@@ -786,11 +807,10 @@ namespace Oxide.Plugins
                         if (debug)
                             SendReply (player, messages ["Exceeded entity limit."] + " " + EntityLimit);
 
-                        SendReply (player, $"Count ({total})");
                         break;
                     }
                     if (current > checkFrom.Count) {
-                        SendReply (player, $"Count ({total})");
+
                         break;
                     }
 
@@ -824,30 +844,46 @@ namespace Oxide.Plugins
                             } else {
                                 prodOwners.Add (pid, 1);
                             }
+
+                            health += fentity.Health ();
+                            maxHealth += fentity.MaxHealth ();
                         }
                     }
 
                     Pool.FreeList (ref hits);
                 }
 
-                var percs = new Dictionary<ulong, int> ();
                 var unknown = 100;
+
+                var msg = string.Empty;
+
+                msg = "<size=16>Structure</size>\n";
+                msg += $"Entities: {total}\n";
+
+                if (health > 0 && maxHealth > 0) {
+                    var condition = Mathf.Round (health * 100 / maxHealth);
+                    msg += string.Format (messages ["Condition: {0}%"], condition);
+                }
+
+                SendReply (player, msg);
+
+                msg = "<size=16>Ownership</size>\n";
+
                 if (total > 0) {
                     foreach (var kvp in prodOwners) {
                         var perc = kvp.Value * 100 / total;
-                        percs.Add (kvp.Key, perc);
-                        var n = FindPlayerName (kvp.Key);
-
-                        if (n != messages ["Unknown player"]) {
-                            SendReply (player, $"{n}: {perc}%");
+                        if (kvp.Key != 0) {
+                            var n = FindPlayerName (kvp.Key);
+                            msg += $"{n}: {perc}%\n";
                             unknown -= perc;
                         }
                     }
                 }
 
                 if (unknown > 0)
-                    SendReply (player, string.Format (messages ["Unknown: {0}%"], unknown));
+                    msg += string.Format (messages ["Unknown: {0}%"], unknown);
 
+                SendReply (player, msg);
             }
         }
 
